@@ -1,0 +1,46 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "me.ycdev.android.demo.androidwear"
+
+        minSdkVersion 21
+        targetSdkVersion 25
+
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles 'proguard-dontobfuscate.txt'
+        }
+
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    wearApp project(':wear')
+
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    compile "com.google.android.gms:play-services:${rootProject.ext.gmsVersion}"
+    compile "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
+
+    testCompile "junit:junit:${rootProject.ext.junitVersion}"
+
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+}
