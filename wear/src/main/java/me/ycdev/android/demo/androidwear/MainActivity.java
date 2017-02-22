@@ -1,23 +1,29 @@
 package me.ycdev.android.demo.androidwear;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.BoxInsetLayout;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends WearableActivity {
+import me.ycdev.android.demo.androidwear.capabilityapi.CapabilityApiActivity;
+
+public class MainActivity extends WearableActivity implements View.OnClickListener {
+    private static final String TAG = "MainActivity";
 
     private static final SimpleDateFormat AMBIENT_DATE_FORMAT =
             new SimpleDateFormat("HH:mm", Locale.US);
 
     private BoxInsetLayout mContainerView;
-    private TextView mTextView;
     private TextView mClockView;
+    private Button mCapabilityApiBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,8 +32,9 @@ public class MainActivity extends WearableActivity {
         setAmbientEnabled();
 
         mContainerView = (BoxInsetLayout) findViewById(R.id.container);
-        mTextView = (TextView) findViewById(R.id.text);
         mClockView = (TextView) findViewById(R.id.clock);
+        mCapabilityApiBtn = (Button) findViewById(R.id.capability_api);
+        mCapabilityApiBtn.setOnClickListener(this);
     }
 
     @Override
@@ -49,16 +56,24 @@ public class MainActivity extends WearableActivity {
     }
 
     private void updateDisplay() {
+        int blackColor = ResourcesCompat.getColor(getResources(), android.R.color.black, null);
         if (isAmbient()) {
-            mContainerView.setBackgroundColor(getResources().getColor(android.R.color.black));
-            mTextView.setTextColor(getResources().getColor(android.R.color.white));
+            mContainerView.setBackgroundColor(blackColor);
+            mCapabilityApiBtn.setVisibility(View.GONE);
             mClockView.setVisibility(View.VISIBLE);
-
             mClockView.setText(AMBIENT_DATE_FORMAT.format(new Date()));
         } else {
             mContainerView.setBackground(null);
-            mTextView.setTextColor(getResources().getColor(android.R.color.black));
+            mCapabilityApiBtn.setVisibility(View.VISIBLE);
             mClockView.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view == mCapabilityApiBtn) {
+            Intent intent = new Intent(this, CapabilityApiActivity.class);
+            startActivity(intent);
         }
     }
 }

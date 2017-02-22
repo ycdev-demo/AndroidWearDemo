@@ -6,21 +6,20 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.ycdev.android.demo.androidwear.MainActivity"
+    tools:context="me.ycdev.android.demo.androidwear.capabilityapi.CapabilityApiActivity"
     tools:deviceIds="wear">
 
-    <Button
-        android:id="@+id/capability_api"
+    <TextView
+        android:id="@+id/info"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/capability_api"
+        android:layout_height="match_parent"
         app:layout_box="all" />
 
     <TextView
         android:id="@+id/clock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="bottom|start"
         android:textColor="@android:color/white"
         app:layout_box="all" />
 

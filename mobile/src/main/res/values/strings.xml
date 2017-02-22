@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WearDemo</string>
+    <string name="capability_api">CapabilityApi</string>
 </resources>
