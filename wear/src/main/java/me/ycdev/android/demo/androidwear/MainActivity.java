@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.wearable.activity.WearableActivity;
+import android.support.wearable.phone.PhoneDeviceType;
 import android.support.wearable.view.BoxInsetLayout;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -31,10 +33,23 @@ public class MainActivity extends WearableActivity implements View.OnClickListen
         setContentView(R.layout.activity_main);
         setAmbientEnabled();
 
-        mContainerView = (BoxInsetLayout) findViewById(R.id.container);
-        mClockView = (TextView) findViewById(R.id.clock);
-        mCapabilityApiBtn = (Button) findViewById(R.id.capability_api);
+        mContainerView = findViewById(R.id.container);
+        mClockView = findViewById(R.id.clock);
+        mCapabilityApiBtn = findViewById(R.id.capability_api);
         mCapabilityApiBtn.setOnClickListener(this);
+
+        Log.i(TAG, "paired type: " + getPhoneDevieType());
+    }
+
+    private String getPhoneDevieType() {
+        int type = PhoneDeviceType.getPhoneDeviceType(this);
+        if (type == PhoneDeviceType.DEVICE_TYPE_ANDROID) {
+            return "Android";
+        } else if (type == PhoneDeviceType.DEVICE_TYPE_IOS) {
+            return "iOS";
+        } else {
+            return "unknown";
+        }
     }
 
     @Override
