@@ -26,6 +26,15 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".AppWearableListenerService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <action android:name="com.google.android.gms.wearable.CAPABILITY_CHANGED" />
+                <data android:scheme="wear" android:host="*" />
+            </intent-filter>
+        </service>
+
         <activity android:name=".capabilityapi.CapabilityApiActivity" />
     </application>
 

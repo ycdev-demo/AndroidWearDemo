@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -17,14 +18,12 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import me.ycdev.android.demo.androidwear.R;
 
-public class CapabilityApiActivity extends Activity implements
+public class CapabilityApiActivity extends Activity implements View.OnClickListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         CapabilityApi.CapabilityListener  {
     private static final String TAG = "CapabilityApiActivity";
@@ -57,10 +56,9 @@ public class CapabilityApiActivity extends Activity implements
 
     // Name of capability listed in Wear app's wear.xml.
     // IMPORTANT NOTE: This should be named differently than your Phone app's capability.
-    private static final String CAPABILITY_WEAR_APP = "verify_remote_example_wear_app";
+    private static final String CAPABILITY_WEAR_APP = "capability_static_wear_app";
 
-    private static final SimpleDateFormat AMBIENT_DATE_FORMAT =
-            new SimpleDateFormat("HH:mm", Locale.US);
+    private static final String CAPABILITY_DYNAMIC = "capability_dynamic_demo";
 
     private TextView mInfoView;
 
@@ -75,6 +73,8 @@ public class CapabilityApiActivity extends Activity implements
 
         mInfoView = (TextView) findViewById(R.id.info);
         mInfoView.setText(CHECKING_MESSAGE);
+        findViewById(R.id.add_capability).setOnClickListener(this);
+        findViewById(R.id.remove_capability).setOnClickListener(this);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -213,5 +213,37 @@ public class CapabilityApiActivity extends Activity implements
             Log.d(TAG, installMessage);
             mInfoView.setText(installMessage);
         }
+    }
+
+    @Override
+    public void onClick(View view) {
+        int viewId = view.getId();
+        if (viewId == R.id.add_capability) {
+            addCapability();
+        } else if (viewId == R.id.remove_capability) {
+            removeCapability();
+        }
+    }
+
+    private void addCapability() {
+        Log.d(TAG, "add local capability");
+        Wearable.CapabilityApi.addLocalCapability(mGoogleApiClient, CAPABILITY_DYNAMIC)
+                .setResultCallback(new ResultCallback<CapabilityApi.AddLocalCapabilityResult>() {
+                    @Override
+                    public void onResult(@NonNull CapabilityApi.AddLocalCapabilityResult result) {
+                        Log.d(TAG, "add local capability result: " + result.getStatus());
+                    }
+                });
+    }
+
+    private void removeCapability() {
+        Log.d(TAG, "remove local capability");
+        Wearable.CapabilityApi.removeLocalCapability(mGoogleApiClient, CAPABILITY_DYNAMIC)
+                .setResultCallback(new ResultCallback<CapabilityApi.RemoveLocalCapabilityResult>() {
+                    @Override
+                    public void onResult(@NonNull CapabilityApi.RemoveLocalCapabilityResult result) {
+                        Log.d(TAG, "remove local capability result: " + result.getStatus());
+                    }
+                });
     }
 }

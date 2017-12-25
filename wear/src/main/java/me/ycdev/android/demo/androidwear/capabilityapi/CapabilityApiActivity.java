@@ -1,5 +1,6 @@
 package me.ycdev.android.demo.androidwear.capabilityapi;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,8 +28,7 @@ import java.util.Set;
 import me.ycdev.android.demo.androidwear.R;
 
 public class CapabilityApiActivity extends WearableActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        CapabilityApi.CapabilityListener  {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "CapabilityApiActivity";
 
     private static final String WELCOME_MESSAGE = "Welcome to our Wear app!\n\n";
@@ -48,7 +48,7 @@ public class CapabilityApiActivity extends WearableActivity implements
 
     // Name of capability listed in Phone app's wear.xml.
     // IMPORTANT NOTE: This should be named differently than your Wear app's capability.
-    private static final String CAPABILITY_PHONE_APP = "verify_remote_example_phone_app";
+    private static final String CAPABILITY_PHONE_APP = "capability_static_phone_app";
 
     private static final SimpleDateFormat AMBIENT_DATE_FORMAT =
             new SimpleDateFormat("HH:mm", Locale.US);
@@ -59,6 +59,24 @@ public class CapabilityApiActivity extends WearableActivity implements
 
     private GoogleApiClient mGoogleApiClient;
     private Node mAndroidPhoneNodeWithApp;
+
+    private CapabilityApi.CapabilityListener mCapabilityListener1 = new CapabilityApi.CapabilityListener() {
+        @Override
+        public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
+            Log.d(TAG, "onCapabilityChanged#1: " + capabilityInfo);
+            mAndroidPhoneNodeWithApp = pickBestNodeId(capabilityInfo.getNodes());
+            verifyNodeAndUpdateUI();
+        }
+    };
+
+    private CapabilityApi.CapabilityListener mCapabilityListener2 = new CapabilityApi.CapabilityListener() {
+        @Override
+        public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
+            Log.d(TAG, "onCapabilityChanged#2: " + capabilityInfo);
+            mAndroidPhoneNodeWithApp = pickBestNodeId(capabilityInfo.getNodes());
+            verifyNodeAndUpdateUI();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,8 +137,9 @@ public class CapabilityApiActivity extends WearableActivity implements
         super.onPause();
 
         if ((mGoogleApiClient != null) && mGoogleApiClient.isConnected()) {
-            Wearable.CapabilityApi.removeCapabilityListener(mGoogleApiClient, this,
+            Wearable.CapabilityApi.removeCapabilityListener(mGoogleApiClient, mCapabilityListener1,
                     CAPABILITY_PHONE_APP);
+            Wearable.CapabilityApi.removeListener(mGoogleApiClient, mCapabilityListener2);
             mGoogleApiClient.disconnect();
         }
     }
@@ -140,7 +159,12 @@ public class CapabilityApiActivity extends WearableActivity implements
         Log.d(TAG, "onConnected()");
 
         // Set up listeners for capability changes (install/uninstall of remote app).
-        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, this, CAPABILITY_PHONE_APP);
+        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener1,
+                CAPABILITY_PHONE_APP);
+
+        Uri capabilityUri = Uri.parse("wear://*/capability_");
+        Wearable.CapabilityApi.addListener(mGoogleApiClient, mCapabilityListener2,
+                capabilityUri, CapabilityApi.FILTER_PREFIX);
 
         checkIfPhoneHasApp();
     }
@@ -153,13 +177,6 @@ public class CapabilityApiActivity extends WearableActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.d(TAG, "onConnectionFailed: " + result);
-    }
-
-    @Override
-    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
-        Log.d(TAG, "onCapabilityChanged(): " + capabilityInfo);
-        mAndroidPhoneNodeWithApp = pickBestNodeId(capabilityInfo.getNodes());
-        verifyNodeAndUpdateUI();
     }
 
     private void checkIfPhoneHasApp() {
@@ -178,8 +195,48 @@ public class CapabilityApiActivity extends WearableActivity implements
                     Log.d(TAG, "capability: " + capabilityInfo.getName() + ", nodes: " + capabilityInfo.getNodes());
                     mAndroidPhoneNodeWithApp = pickBestNodeId(capabilityInfo.getNodes());
                     verifyNodeAndUpdateUI();
+                    getWearAppCapabilities();
                 } else {
                     Log.d(TAG, "Failed CapabilityApi: " + result.getStatus());
+                }
+            }
+        });
+    }
+
+    private void getWearAppCapabilities() {
+        Log.d(TAG, "try to get wear app capability()");
+        PendingResult<CapabilityApi.GetCapabilityResult> pendingResult =
+                Wearable.CapabilityApi.getCapability(mGoogleApiClient,
+                        "capability_static_wear_app", CapabilityApi.FILTER_ALL);
+
+        pendingResult.setResultCallback(new ResultCallback<CapabilityApi.GetCapabilityResult>() {
+            @Override
+            public void onResult(@NonNull CapabilityApi.GetCapabilityResult result) {
+                Log.d(TAG, "getCapability onResult: " + result.getStatus());
+                if (result.getStatus().isSuccess()) {
+                    CapabilityInfo capabilityInfo = result.getCapability();
+                    Log.d(TAG, "capability: " + capabilityInfo.getName() + ", nodes: " + capabilityInfo.getNodes());
+                    mAndroidPhoneNodeWithApp = pickBestNodeId(capabilityInfo.getNodes());
+                    verifyNodeAndUpdateUI();
+                    getAllCapabilities();
+                } else {
+                    Log.d(TAG, "Failed CapabilityApi: " + result.getStatus());
+                }
+            }
+        });
+    }
+
+    private void getAllCapabilities() {
+        Log.d(TAG, "get all capabilities");
+        PendingResult<CapabilityApi.GetAllCapabilitiesResult> pendingResult =
+                Wearable.CapabilityApi.getAllCapabilities(mGoogleApiClient,
+                        CapabilityApi.FILTER_ALL);
+        pendingResult.setResultCallback(new ResultCallback<CapabilityApi.GetAllCapabilitiesResult>() {
+            @Override
+            public void onResult(@NonNull CapabilityApi.GetAllCapabilitiesResult result) {
+                Log.d(TAG, "getAllCapabilities, onResult: " + result.getStatus());
+                for (CapabilityInfo info : result.getAllCapabilities().values()) {
+                    Log.d(TAG, "traverse capability: " + info.getName() + ", nodes: " + info.getNodes());
                 }
             }
         });
